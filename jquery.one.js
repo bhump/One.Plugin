@@ -10,7 +10,6 @@
         var $table = this;
         var tableId = $table.attr('id');
 
-        $table.addClass('one_' + tableId);
         $table.attr('data-url', options.updateUrl);
 
         var o = jQuery.extend({}, jQuery.fn.one.defaults, options, {
