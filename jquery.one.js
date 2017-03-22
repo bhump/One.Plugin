@@ -44,8 +44,42 @@
 
                                 label.addClass('one-label');
 
-                                var textboxMarkup = '<input type="text" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
-                                $currentCell.append(textboxMarkup);
+                                var markup = + "";
+
+                                $(o.textColumns).each(function (textIndex, textValue) {
+                                    if (i.toString() == textValue)
+                                        markup = '<input type="text" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                });
+
+                                $(o.numberColumns).each(function (numberIndex, numberValue) {
+                                    if (i.toString() == numberValue)
+                                        markup = '<input type="number" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                });
+
+                                $(o.emailColumns).each(function (emailIndex, emailValue) {
+                                    if (i.toString() == emailValue)
+                                        markup = '<input type="email" name="email" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '" required></input>';
+                                });
+
+                                $(o.telColumns).each(function (telIndex, telValue) {
+                                    if (i.toString() == telValue)
+                                        markup = '<input type="tel" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                });
+
+                                $(o.checkboxColumns).each(function (checkboxIndex, checkboxValue) {
+                                    if (i.toString() == checkboxValue) {
+                                        label.removeClass('one-label').addClass('one-label-checkbox').addClass('hidden');
+                                        var isActive = label.attr('data-onebool');
+                                        if (isActive === "True") {
+                                            markup = '<input type="checkbox" class="one-checkbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '" checked></input>';
+                                        }
+                                        else {
+                                            markup = '<input type="checkbox" class="one-checkbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                        }
+                                    }
+                                });
+
+                                $currentCell.append(markup);
                             }
                         });
                     });
@@ -109,12 +143,38 @@
             var $row = $('.active-one').parents('tr');
 
             var $parentTable = $row.parents('table');
-            console.log($parentTable);
             $('.active-one-label').html($('.active-one-textbox').val());
             globalId = id;
             globalField = field;
             globalText = $('.active-one-textbox').val();
             globalUpdateUrl = $parentTable.attr('data-url');
+        });
+
+        $(document).on('change', '.one-checkbox', function () {
+            var id = $(this).data('id');
+            var field = $(this).data('field');
+
+            var $row = $('.active-one').parents('tr');
+            var $parentTable = $row.parents('table');
+
+            if ($(this).is(':checked')) {
+                globalText = "True";
+            }
+            else {
+                globalText = "False";
+            }
+
+            globalId = id;
+            globalField = field;
+            globalUpdateUrl = $parentTable.attr('data-url');
+
+            if (globalId != "") {
+                o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
+                globalId = "";
+                globalField = "";
+                globalText = "";
+                globalUpdateUrl = "";
+            }
         });
 
         $('body').on('click', function () {
@@ -135,6 +195,14 @@
         type: "html",
         columns: 5,
         editableColumns: [1, 2, 3, 4, 5],
+        textColumns: [1, 2, 3, 4, 5],
+        emailColumns: [],
+        passwordColumns: [],
+        checkboxColumns: [],
+        radioColumns: [],
+        dateColumns: [],
+        telColumns: [],
+        numberColumns: [],
         updateUrl: ""
     };
 })(jQuery);
