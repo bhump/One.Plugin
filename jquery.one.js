@@ -66,6 +66,11 @@
                                         markup = '<input type="tel" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
                                 });
 
+                                $(o.dateColumns).each(function (dateIndex, dateValue) {
+                                    if (i.toString() == dateValue)
+                                        markup = '<input type="date" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                });
+
                                 $(o.checkboxColumns).each(function (checkboxIndex, checkboxValue) {
                                     if (i.toString() == checkboxValue) {
                                         label.removeClass('one-label').addClass('one-label-checkbox').addClass('hidden');
