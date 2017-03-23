@@ -151,7 +151,21 @@
             var $row = $('.active-one').parents('tr');
 
             var $parentTable = $row.parents('table');
-            $('.active-one-label').html($('.active-one-textbox').val());
+
+            var textbox = $('.active-one-textbox');
+
+            if ($(textbox.hasClass('one-date'))){
+                var split = textbox.val().split('-');
+                var day = split[2];
+                var month = split[1];
+                var year = split[0];
+
+                $('.active-one-label').html(month + "/" + day + "/" + year);
+
+            } else {
+                $('.active-one-label').html($('.active-one-textbox').val());
+            }
+
             globalId = id;
             globalField = field;
             globalText = $('.active-one-textbox').val();
