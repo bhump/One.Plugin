@@ -48,12 +48,12 @@
 
                                 $(o.textColumns).each(function (textIndex, textValue) {
                                     if (i.toString() == textValue)
-                                        markup = '<input type="text" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                        markup = '<input type="text" tabindex="' + textValue + '" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
                                 });
 
                                 $(o.numberColumns).each(function (numberIndex, numberValue) {
                                     if (i.toString() == numberValue)
-                                        markup = '<input type="number" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                        markup = '<input type="number" class="hidden one-textbox one-number field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
                                 });
 
                                 $(o.emailColumns).each(function (emailIndex, emailValue) {
@@ -68,7 +68,7 @@
 
                                 $(o.dateColumns).each(function (dateIndex, dateValue) {
                                     if (i.toString() == dateValue)
-                                        markup = '<input type="date" class="hidden one-textbox field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
+                                        markup = '<input type="date" class="hidden one-textbox one-date field-' + value + '" data-id="' + rowId + '" data-field="field' + value + '"></input>';
                                 });
 
                                 $(o.checkboxColumns).each(function (checkboxIndex, checkboxValue) {
@@ -92,7 +92,6 @@
             },
 
             DeactivateCells: function () {
-                console.log($table);
                 $($table).find('.one-cell').removeClass('active-one');
                 $($table).find('.one-label').removeClass('active-one-label').removeClass('hidden');
                 $($table).find('.one-textbox').addClass('hidden').removeClass('active-one-textbox');
@@ -127,8 +126,7 @@
 
         o.init(this);
 
-        $(document).on('click', '.one-cell', function () {
-            o.DeactivateCells();
+        $(document).on('click', '.one-cell', function (e) {
 
             var $activeCell = $(this);
 
@@ -139,10 +137,29 @@
             var label = $activeCell.find('.one-label');
             label.addClass('active-one-label').addClass('hidden');
 
+            //If cell click equals the textbox don't return
+            if (e.target === textbox[0]) return false;
+
             textbox.val(label.html());
+
+            return false;
         });
 
         $(document).on('keyup', '.active-one-textbox', function () {
+            var id = $(this).data('id');
+            var field = $(this).data('field');
+            var $row = $('.active-one').parents('tr');
+
+            var $parentTable = $row.parents('table');
+            $('.active-one-label').html($('.active-one-textbox').val());
+            globalId = id;
+            globalField = field;
+            globalText = $('.active-one-textbox').val();
+            globalUpdateUrl = $parentTable.attr('data-url');
+        });
+
+        //Change event for up and down arrows on a number input.
+        $(document).on('change', '.active-one-textbox.one-number', function () {
             var id = $(this).data('id');
             var field = $(this).data('field');
             var $row = $('.active-one').parents('tr');
@@ -183,7 +200,6 @@
         });
 
         $('body').on('click', function () {
-
             if (globalId != "") {
                 o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
                 globalId = "";
