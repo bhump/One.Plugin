@@ -160,13 +160,13 @@
 
             //If cell click equals the textbox don't return
             if (e.target === $textbox[0]) return false;
-                
+
             $textbox.val($label.html());
 
             return false;
         });
 
-        $($table).on('keyup', '.active-one-textbox', function (e) {
+        $($table).on('keydown', '.active-one-textbox', function (e) {
 
             var id = $(this).data('id');
             var field = $(this).data('field');
@@ -186,17 +186,43 @@
                 $('.active-one-label').html($textbox.val());
             }
 
-            console.log($table.attr('data-url'));
-
             globalId = id;
             globalField = field;
             globalText = $('.active-one-textbox').val();
             globalUpdateUrl = $table.attr('data-url');
 
             if (e.which == 9) {
+
                 var currentTabIndex = $textbox.attr('tabIndex');
                 console.log(currentTabIndex);
+
+                if (globalId != "") {
+                    o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
+                    globalId = "";
+                    globalField = "";
+                    globalText = "";
+                    globalUpdateUrl = "";
+                }
+
+                o.DeactivateCells();
+
+                var nextTabIndex = (parseInt(currentTabIndex) + 1).toString();
+
+                var $nextInput = $('input[tabindex="' + nextTabIndex + '"]');
+
+                var $nextCell = $nextInput.parent('td');
+                var $nextLabel = $nextCell.find('.one-label');
+                var $nextTextbox = $nextCell.find('.one-textbox');
+
+                if ($nextCell != null && $nextTextbox != null) {
+
+                    $nextCell.addClass('active-one');
+                    $nextLabel.addClass('hidden').addClass('active-one-label');
+                    $nextTextbox.removeClass('hidden').addClass('active-one-textbox');
+                    $nextTextbox.val($nextLabel.html());
+                }
             }
+
         });
 
         //Change event for up and down arrows on a number input.
@@ -235,11 +261,6 @@
             globalId = id;
             globalField = field;
             globalUpdateUrl = $table.attr('data-url');
-
-            console.log(globalId);
-            console.log(globalField);
-            console.log(globalText);
-            console.log(globalUpdateUrl);
 
             if (globalId != "") {
                 o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
