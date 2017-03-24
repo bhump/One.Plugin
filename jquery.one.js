@@ -18,7 +18,7 @@
 
                 var $item = $(item);
 
-                $($item).find('tr').each(function () {
+                $($item).find('tr').each(function (trIndex, trValue) {
                     globalUpdateUrl = options.updateUrl;
 
                     var rowId = $(this).find('td:first').text();
@@ -88,13 +88,18 @@
                             }
                         });
                     });
+
+                    $(':input').each(function (i) {
+                        $(this).attr('tabindex', i + 1);
+                    });
+
                 });
             },
 
             DeactivateCells: function () {
-                $($table).find('.one-cell').removeClass('active-one');
-                $($table).find('.one-label').removeClass('active-one-label').removeClass('hidden');
-                $($table).find('.one-textbox').addClass('hidden').removeClass('active-one-textbox');
+                $(document).find('.one-cell').removeClass('active-one');
+                $(document).find('.one-label').removeClass('active-one-label').removeClass('hidden');
+                $(document).find('.one-textbox').addClass('hidden').removeClass('active-one-textbox');
             },
 
             UpdateDatabase: function (id, field, text) {
@@ -116,6 +121,7 @@
                         console.log("Update Successful.");
                     },
                     error: function (response) {
+                        console.log(response);
                         alert("Uh Oh. :( Update was unsuccessful. ");
                     }
                 });
@@ -126,54 +132,75 @@
 
         o.init(this);
 
-        $(document).on('click', '.one-cell', function (e) {
+        $($table).on('click', '.one-cell', function (e) {
+
+            if (globalId != "") {
+                o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
+                globalId = "";
+                globalField = "";
+                globalText = "";
+                globalUpdateUrl = "";
+            }
+
+            o.DeactivateCells();
 
             var $activeCell = $(this);
 
             $activeCell.addClass('active-one');
-            var textbox = $activeCell.find('.one-textbox');
-            textbox.addClass('active-one-textbox').removeClass('hidden');
+            var $textbox = $activeCell.find('.one-textbox');
+            $textbox.addClass('active-one-textbox').removeClass('hidden');
 
-            var label = $activeCell.find('.one-label');
-            label.addClass('active-one-label').addClass('hidden');
+            var $label = $activeCell.find('.one-label');
+            $label.addClass('active-one-label').addClass('hidden');
+
+            var $checkbox = $activeCell.find('.one-checkbox');
+
+            //If cell click equals the checkbox, return to show check/uncheck
+            if (e.target === $checkbox[0]) return true;
 
             //If cell click equals the textbox don't return
-            if (e.target === textbox[0]) return false;
-
-            textbox.val(label.html());
+            if (e.target === $textbox[0]) return false;
+                
+            $textbox.val($label.html());
 
             return false;
         });
 
-        $(document).on('keyup', '.active-one-textbox', function () {
+        $($table).on('keyup', '.active-one-textbox', function (e) {
+
             var id = $(this).data('id');
             var field = $(this).data('field');
             var $row = $('.active-one').parents('tr');
 
             var $parentTable = $row.parents('table');
 
-            var textbox = $('.active-one-textbox');
+            var $textbox = $('.active-one-textbox');
 
-            if ($(textbox.hasClass('one-date'))){
-                var split = textbox.val().split('-');
+            if ($($textbox).hasClass("one-date")) {
+                var split = $textbox.val().split('-');
                 var day = split[2];
                 var month = split[1];
                 var year = split[0];
-
                 $('.active-one-label').html(month + "/" + day + "/" + year);
-
             } else {
-                $('.active-one-label').html($('.active-one-textbox').val());
+                $('.active-one-label').html($textbox.val());
             }
+
+            console.log($table.attr('data-url'));
 
             globalId = id;
             globalField = field;
             globalText = $('.active-one-textbox').val();
-            globalUpdateUrl = $parentTable.attr('data-url');
+            globalUpdateUrl = $table.attr('data-url');
+
+            if (e.which == 9) {
+                var currentTabIndex = $textbox.attr('tabIndex');
+                console.log(currentTabIndex);
+            }
         });
 
         //Change event for up and down arrows on a number input.
-        $(document).on('change', '.active-one-textbox.one-number', function () {
+        $($table).on('change', '.active-one-textbox.one-number', function () {
             var id = $(this).data('id');
             var field = $(this).data('field');
             var $row = $('.active-one').parents('tr');
@@ -186,23 +213,33 @@
             globalUpdateUrl = $parentTable.attr('data-url');
         });
 
-        $(document).on('change', '.one-checkbox', function () {
+        $($table).on('click', '.one-checkbox', function () {
+
             var id = $(this).data('id');
             var field = $(this).data('field');
 
             var $row = $('.active-one').parents('tr');
             var $parentTable = $row.parents('table');
 
-            if ($(this).is(':checked')) {
+            var $checkbox = $(this);
+
+            if ($(this).prop('checked')) {
+                $checkbox.prop('checked', true);
                 globalText = "True";
             }
             else {
+                $checkbox.prop('checked', false);
                 globalText = "False";
             }
 
             globalId = id;
             globalField = field;
-            globalUpdateUrl = $parentTable.attr('data-url');
+            globalUpdateUrl = $table.attr('data-url');
+
+            console.log(globalId);
+            console.log(globalField);
+            console.log(globalText);
+            console.log(globalUpdateUrl);
 
             if (globalId != "") {
                 o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
@@ -214,6 +251,7 @@
         });
 
         $('body').on('click', function () {
+
             if (globalId != "") {
                 o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
                 globalId = "";
