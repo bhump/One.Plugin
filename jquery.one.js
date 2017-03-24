@@ -134,6 +134,8 @@
 
         $($table).on('click', '.one-cell', function (e) {
 
+            o.DeactivateCells();
+
             if (globalId != "") {
                 o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
                 globalId = "";
@@ -141,8 +143,6 @@
                 globalText = "";
                 globalUpdateUrl = "";
             }
-
-            o.DeactivateCells();
 
             var $activeCell = $(this);
 
