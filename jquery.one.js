@@ -1,16 +1,18 @@
 ﻿(function ($) {
 
+    var globalDeleteUrl = "";
     var globalUpdateUrl = "";
     var globalId = "";
     var globalField = "";
-    var globalText = ""
+    var globalText = "";
 
     $.fn.one = function (options) {
 
         var $table = this;
         var tableId = $table.attr('id');
 
-        $table.attr('data-url', options.updateUrl);
+        $table.attr('data-updateurl', options.updateUrl);
+        $table.attr('data-deleteurl', options.deleteUrl);
 
         var o = jQuery.extend({}, jQuery.fn.one.defaults, options, {
 
@@ -19,9 +21,19 @@
                 var $item = $(item);
 
                 $($item).find('tr').each(function (trIndex, trValue) {
+
                     globalUpdateUrl = options.updateUrl;
+                    globalDeleteUrl = options.deleteUrl;
 
                     var rowId = $(this).find('td:first').text();
+
+                    if (o.delete) {
+                        if ($(this).index() != 0) {
+                            $(this).append("<td><a id='aDelete' class='delete' data-deleteid='" + rowId + "'>Delete</a></td>");
+                        } else {
+                            $(this).append("<td></td>");
+                        }
+                    }
 
                     $('td', this).each(function (i, v) {
 
@@ -87,6 +99,7 @@
                                 $currentCell.append(markup);
                             }
                         });
+
                     });
 
                     $(':input').each(function (i) {
@@ -102,7 +115,11 @@
                 $(document).find('.one-textbox').addClass('hidden').removeClass('active-one-textbox');
             },
 
-            UpdateDatabase: function (id, field, text) {
+            UpdateRecord: function (id, field, text) {
+
+                console.log("Global Update Url: " + globalUpdateUrl);
+                console.log("Field: " + field);
+                console.log("Text: " + text);
 
                 var data = {
                     "id": id,
@@ -126,6 +143,28 @@
                     }
                 });
 
+            },
+
+            DeleteRecord: function (id) {
+                var data = {
+                    "id": id
+                }
+
+                $.ajax({
+                    type: 'Post',
+                    dataType: 'json',
+                    data: JSON.stringify(data),
+                    url: globalDeleteUrl,
+                    contentType: 'application/json',
+                    cache: false,
+                    success: function (result) {
+                        console.log("Update Successful.");
+                    },
+                    error: function (response) {
+                        console.log(response);
+                        alert("Uh Oh. :( Update was unsuccessful. ");
+                    }
+                });
             }
 
         });
@@ -134,10 +173,15 @@
 
         $($table).on('click', '.one-cell', function (e) {
 
+            var $row = $(this).parents('tr');
+            var $parentTable = $row.parents('table');
+
+            globalUpdateUrl = $parentTable.attr('data-updateurl');
+            console.log("GlobalText: " + globalText);
             o.DeactivateCells();
 
             if (globalId != "") {
-                o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
+                o.UpdateRecord(globalId, globalField, globalText);
                 globalId = "";
                 globalField = "";
                 globalText = "";
@@ -170,7 +214,7 @@
 
             var id = $(this).data('id');
             var field = $(this).data('field');
-            var $row = $('.active-one').parents('tr');
+            var $row = $(this).parents('tr');
 
             var $parentTable = $row.parents('table');
 
@@ -189,7 +233,7 @@
             globalId = id;
             globalField = field;
             globalText = $('.active-one-textbox').val();
-            globalUpdateUrl = $table.attr('data-url');
+            globalUpdateUrl = $parentTable.attr('data-updateurl');
 
             if (e.which == 9) {
 
@@ -197,7 +241,7 @@
                 console.log(currentTabIndex);
 
                 if (globalId != "") {
-                    o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
+                    o.UpdateRecord(globalId, globalField, globalText);
                     globalId = "";
                     globalField = "";
                     globalText = "";
@@ -222,7 +266,27 @@
                     $nextTextbox.val($nextLabel.html());
                 }
             }
+        });
 
+        $($table).on('keyup', '.active-one-textbox', function (e) {
+
+            var id = $(this).data('id');
+            var field = $(this).data('field');
+            var $row = $(this).parents('tr');
+            var $parentTable = $row.parents('table');
+            var $textbox = $('.active-one-textbox');
+
+            if ($($textbox).hasClass("one-date")) {
+                var split = $textbox.val().split('-');
+                var day = split[2];
+                var month = split[1];
+                var year = split[0];
+                $('.active-one-label').html(month + "/" + day + "/" + year);
+            } else {
+                $('.active-one-label').html($textbox.val());
+            }
+
+            globalText = $('.active-one-textbox').val();
         });
 
         //Change event for up and down arrows on a number input.
@@ -236,7 +300,7 @@
             globalId = id;
             globalField = field;
             globalText = $('.active-one-textbox').val();
-            globalUpdateUrl = $parentTable.attr('data-url');
+            globalUpdateUrl = $parentTable.attr('data-updateurl');
         });
 
         $($table).on('click', '.one-checkbox', function () {
@@ -244,7 +308,7 @@
             var id = $(this).data('id');
             var field = $(this).data('field');
 
-            var $row = $('.active-one').parents('tr');
+            var $row = $(this).parents('tr');
             var $parentTable = $row.parents('table');
 
             var $checkbox = $(this);
@@ -260,10 +324,10 @@
 
             globalId = id;
             globalField = field;
-            globalUpdateUrl = $table.attr('data-url');
+            globalUpdateUrl = $parentTable.attr('data-updateurl');
 
             if (globalId != "") {
-                o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
+                o.UpdateRecord(globalId, globalField, globalText);
                 globalId = "";
                 globalField = "";
                 globalText = "";
@@ -271,10 +335,23 @@
             }
         });
 
+        $('.delete').on('click', function () {
+
+            var id = $(this).attr('data-deleteid');
+            var $row = $(this).parents('tr');
+            var $parentTable = $row.parents('table');
+
+            globalDeleteUrl = $parentTable.attr('data-deleteurl');
+
+            $($row).hide();
+
+            o.DeleteRecord(id);
+        });
+
         $('body').on('click', function () {
 
             if (globalId != "") {
-                o.UpdateDatabase(globalId, globalField, globalText, globalUpdateUrl);
+                o.UpdateRecord(globalId, globalField, globalText);
                 globalId = "";
                 globalField = "";
                 globalText = "";
@@ -297,7 +374,9 @@
         dateColumns: [],
         telColumns: [],
         numberColumns: [],
-        updateUrl: ""
+        updateUrl: "", 
+        deleteUrl: "",
+        delete: false
     };
 })(jQuery);
 
