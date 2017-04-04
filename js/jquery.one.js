@@ -28,11 +28,21 @@
                     var rowId = $(this).find('td:first').text();
 
                     if (o.delete) {
-                        if ($(this).index() != 0) {
-                            $(this).append("<td><a id='aDelete' class='delete' data-deleteid='" + rowId + "'>Delete</a></td>");
+
+                        if (o.type != "gridview") {
+                            if ($(this).parent('thead').length) {
+                                $(this).append("<td></td>");
+                            } else {
+                                $(this).append("<td><a id='aDelete' class='delete' data-deleteid='" + rowId + "'>Delete</a></td>");
+                            }
                         } else {
-                            $(this).append("<td></td>");
+                            if ($(this).index() != 0) {
+                                $(this).append("<td><a id='aDelete' class='delete' data-deleteid='" + rowId + "'>Delete</a></td>");
+                            } else {
+                                $(this).append("<td></td>");
+                            }
                         }
+
                     }
 
                     $('td', this).each(function (i, v) {
@@ -374,7 +384,7 @@
         dateColumns: [],
         telColumns: [],
         numberColumns: [],
-        updateUrl: "", 
+        updateUrl: "",
         deleteUrl: "",
         delete: false
     };
